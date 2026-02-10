@@ -1,14 +1,14 @@
 ---
 name: everclaw
-version: 0.2.0
-description: Unlimited AI inference for OpenClaw agents via the Morpheus decentralized network. Stake MOR tokens, access Kimi K2.5 and 10+ models, and never run out of inference by recycling staked MOR. Includes OpenAI-compatible proxy with auto-session management and Gateway Guardian watchdog.
+version: 0.3.0
+description: Unlimited AI inference for OpenClaw agents via the Morpheus decentralized network. Stake MOR tokens, access Kimi K2.5 and 10+ models, and never run out of inference by recycling staked MOR. Includes OpenAI-compatible proxy with auto-session management, Gateway Guardian watchdog, and bundled security skills for protecting agents that handle valuable tokens.
 homepage: https://everclaw.com
 metadata:
   openclaw:
     emoji: "♾️"
     requires:
       bins: ["curl", "op", "node"]
-    tags: ["inference", "everclaw", "morpheus", "mor", "decentralized", "ai", "blockchain", "base", "unlimited", "fallback", "guardian"]
+    tags: ["inference", "everclaw", "morpheus", "mor", "decentralized", "ai", "blockchain", "base", "unlimited", "fallback", "guardian", "security"]
 ---
 
 # ♾️ Everclaw — Unlimited Decentralized AI Inference
@@ -664,7 +664,7 @@ Edit variables at the top of `gateway-guardian.sh`:
 
 ---
 
-## Quick Reference (v0.2)
+## Quick Reference (v0.3)
 
 | Action | Command |
 |--------|---------|
@@ -682,6 +682,121 @@ Edit variables at the top of `gateway-guardian.sh`:
 | Proxy health | `curl http://127.0.0.1:8083/health` |
 | Guardian test | `bash scripts/gateway-guardian.sh --verbose` |
 | Guardian logs | `tail -f ~/.openclaw/logs/guardian.log` |
+| Scan a skill | `node security/skillguard/src/cli.js scan <path>` |
+| Batch scan | `node security/skillguard/src/cli.js batch <dir>` |
+| Security audit | `bash security/clawdstrike/scripts/collect_verified.sh` |
+| Detect injection | `python3 security/prompt-guard/scripts/detect.py "text"` |
+
+---
+
+## 14. Security Skills (v0.3)
+
+Everclaw agents handle MOR tokens and private keys — making them high-value targets. v0.3 bundles four security skills to defend against supply chain attacks, prompt injection, credential theft, and configuration exposure.
+
+### 🔍 SkillGuard — Pre-Install Skill Scanner
+
+Scans AgentSkill packages for malicious patterns before you install them. Detects credential theft, code injection, prompt manipulation, data exfiltration, and evasion techniques.
+
+```bash
+# Scan a skill directory
+node security/skillguard/src/cli.js scan <path>
+
+# Batch scan all installed skills
+node security/skillguard/src/cli.js batch <directory>
+
+# Scan a ClawHub skill by slug
+node security/skillguard/src/cli.js scan-hub <slug>
+```
+
+**Score interpretation:**
+- 80-100 ✅ LOW risk — safe to install
+- 50-79 ⚠️ MEDIUM — review before installing
+- 20-49 🟠 HIGH — significant concerns
+- 0-19 🔴 CRITICAL — do NOT install
+
+**When to use:** Before installing any skill from ClawHub or untrusted sources. Run batch scans periodically to audit all installed skills.
+
+Full docs: `security/skillguard/SKILL.md`
+
+### 🔒 ClawdStrike — Config & Exposure Audits
+
+Security audit and threat model for OpenClaw gateway hosts. Verifies configuration, network exposure, installed skills/plugins, and filesystem hygiene. Produces an OK/VULNERABLE report with evidence and remediation steps.
+
+```bash
+# Run a full audit
+cd security/clawdstrike && \
+  OPENCLAW_WORKSPACE_DIR=$HOME/.openclaw/workspace \
+  bash scripts/collect_verified.sh
+```
+
+**What it checks:**
+- Gateway bind address and auth configuration
+- Channel exposure (Signal, Telegram, Discord, etc.)
+- Installed skills and plugins for known vulnerabilities
+- Filesystem permissions and sensitive file access
+- Network exposure and firewall rules
+- OpenClaw version and known CVEs
+
+**When to use:** After initial setup, after installing new skills, and periodically (weekly recommended).
+
+Full docs: `security/clawdstrike/SKILL.md`
+
+### 🧱 PromptGuard — Prompt Injection Defense
+
+Advanced prompt injection defense system with multi-language detection (EN/KO/JA/ZH), severity scoring, automatic logging, and configurable security policies. Connects to the HiveFence distributed threat intelligence network.
+
+```bash
+# Analyze a message for injection attempts
+python3 security/prompt-guard/scripts/detect.py "suspicious message here"
+
+# Run audit on prompt injection logs
+python3 security/prompt-guard/scripts/audit.py
+
+# Analyze historical logs
+python3 security/prompt-guard/scripts/analyze_log.py
+```
+
+**Detection categories:**
+- Direct injection (instruction overrides, role manipulation)
+- Indirect injection (data exfiltration, hidden instructions)
+- Jailbreak attempts (DAN mode, filter bypasses)
+- Multi-language attacks (cross-language injection)
+
+**When to use:** In group chats, when processing untrusted input, when agents interact with external data sources.
+
+Full docs: `security/prompt-guard/SKILL.md`
+
+### 💰 Bagman — Secure Key Management
+
+Secure key management for AI agents handling private keys, API secrets, and wallet credentials. Covers secure storage patterns, session keys, leak prevention, prompt injection defense specific to financial operations, and MetaMask Delegation Framework (EIP-7710) integration.
+
+**Key principles:**
+- **Never store keys on disk** — use 1Password `op run` for runtime injection
+- **Session keys** — generate ephemeral keys with limited permissions
+- **Delegation Framework** — grant agents scoped authority without exposing master keys
+- **Leak prevention** — patterns to detect and block secret exposure
+
+**Reference docs:**
+- `security/bagman/references/secure-storage.md` — Storage patterns
+- `security/bagman/references/session-keys.md` — Session key architecture
+- `security/bagman/references/delegation-framework.md` — EIP-7710 integration
+- `security/bagman/references/leak-prevention.md` — Leak detection rules
+- `security/bagman/references/prompt-injection-defense.md` — Financial-specific injection defense
+
+**When to use:** Whenever an agent handles private keys, wallet credentials, or API secrets — which Everclaw agents always do.
+
+Full docs: `security/bagman/SKILL.md`
+
+### Security Recommendations
+
+For Everclaw agents handling MOR tokens:
+
+1. **Before installing any new skill:** Run SkillGuard scan
+2. **After setup and periodically:** Run ClawdStrike audit
+3. **In group chats or with untrusted input:** Enable PromptGuard detection
+4. **Always:** Follow Bagman patterns for key management (1Password, session keys, no keys on disk)
+
+---
 
 ## References
 
@@ -690,3 +805,7 @@ Edit variables at the top of `gateway-guardian.sh`:
 - `references/api.md` — Complete proxy-router API reference
 - `references/economics.md` — How MOR staking economics work
 - `references/troubleshooting.md` — Common errors and solutions
+- `security/skillguard/SKILL.md` — SkillGuard full documentation
+- `security/clawdstrike/SKILL.md` — ClawdStrike full documentation
+- `security/prompt-guard/SKILL.md` — PromptGuard full documentation
+- `security/bagman/SKILL.md` — Bagman full documentation
