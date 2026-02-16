@@ -55,7 +55,7 @@ async function refreshModelMap() {
       console.warn("[morpheus-proxy] Model refresh returned empty list, keeping existing map");
       return;
     }
-    let added = 0;
+    let added = 0, updated = 0;
     for (const m of models) {
       const name = m.Name || m.name;
       const id = m.Id || m.id;
@@ -65,9 +65,10 @@ async function refreshModelMap() {
       } else if (name && id) {
         // Update existing entry in case the on-chain ID changed
         MODEL_MAP[name] = id;
+        updated++;
       }
     }
-    console.log(`[morpheus-proxy] Refreshed MODEL_MAP: ${Object.keys(MODEL_MAP).length} models (${added} new)`);
+    console.log(`[morpheus-proxy] Refreshed MODEL_MAP: ${Object.keys(MODEL_MAP).length} models (${added} new, ${updated} updated)`);
   } catch (e) {
     console.warn(`[morpheus-proxy] Failed to refresh MODEL_MAP, using defaults: ${e.message}`);
   }
